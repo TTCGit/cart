@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+button.stepper {
+  @apply bg-purple-600 text-white transition-all duration-200 hover:bg-purple-700 rounded-full p-1.5;
+}
+
+button {
+  cursor: pointer;
+}

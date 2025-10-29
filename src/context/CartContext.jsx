@@ -1,14 +1,21 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useReducer, useState } from "react";
 import cartItems from "../data/data";
-
+import reducer from "../reducer/reducer";
 const CartContextContainer = createContext();
 
 export const useCartContextContainer = () => useContext(CartContextContainer);
+
+const initialState = {
+  loading: false,
+  cart: new Map(),
+};
 
 const CartContext = ({ children }) => {
   const [cart, setCart] = useState(cartItems);
   const totalItems = cart.reduce((sum, i) => sum + i.amount, 0);
   const totalCart = cart.reduce((sum, i) => sum + i.price * i.amount, 0);
+
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const handleInc = (cartItem) => {
     const arr = cart.map((item) =>
@@ -44,14 +51,7 @@ const CartContext = ({ children }) => {
   return (
     <CartContextContainer.Provider
       value={{
-        cart,
-        setCart,
-        handleInc,
-        totalItems,
-        handleDec,
-        totalCart,
-        clearCart,
-        handleDelete,
+        ...state,
       }}>
       {children}
     </CartContextContainer.Provider>

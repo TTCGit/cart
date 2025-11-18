@@ -1,7 +1,24 @@
-import { createContext, useContext, useReducer, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import cartItems from "../data/data";
 import reducer from "../reducer/reducer";
 const CartContextContainer = createContext();
+const url = "https://www.course-api.com/react-useReducer-cart-project";
+
+import {
+  CLEAR_CART,
+  REMOVE,
+  INCREASE,
+  DECREASE,
+  LOADING,
+  DISPLAY_ITEMS,
+} from "../actions/actions";
+import { getTotals } from "../utils/utils";
 
 export const useCartContextContainer = () => useContext(CartContextContainer);
 
@@ -11,47 +28,49 @@ const initialState = {
 };
 
 const CartContext = ({ children }) => {
-  const [cart, setCart] = useState(cartItems);
-  const totalItems = cart.reduce((sum, i) => sum + i.amount, 0);
-  const totalCart = cart.reduce((sum, i) => sum + i.price * i.amount, 0);
-
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const handleInc = (cartItem) => {
-    const arr = cart.map((item) =>
-      item.title === cartItem.title
-        ? { ...item, amount: item.amount + 1 }
-        : item
-    );
-
-    setCart(arr);
-  };
-
-  const handleDec = (cartItem) => {
-    const arr = cart
-      .map((item) =>
-        item.title === cartItem.title
-          ? { ...item, amount: item.amount - 1 }
-          : item
-      )
-      .filter((item) => item.amount > 0);
-
-    setCart(arr);
-  };
+  const { totalAmount, totalCost } = getTotals(state.cart);
 
   const clearCart = () => {
-    setCart([]);
+    dispatch({ type: CLEAR_CART });
   };
 
-  const handleDelete = (cartItem) => {
-    const arr = cart.filter((item) => item.title !== cartItem.title);
-    setCart(arr);
+  const handleDelete = (id) => {
+    dispatch({ type: REMOVE, payload: id });
   };
+
+  const handleInc = (id) => {
+    dispatch({ type: INCREASE, payload: id });
+  };
+  const handleDec = (id) => {
+    dispatch({ type: DECREASE, payload: id });
+  };
+
+  const fetchData = async () => {
+    dispatch({ type: LOADING });
+
+    const res = await fetch(url);
+    const cart = await res.json();
+
+    dispatch({ type: DISPLAY_ITEMS, payload: { cart } });
+    console.log(cart);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <CartContextContainer.Provider
       value={{
         ...state,
+        clearCart,
+        handleDelete,
+        handleDec,
+        handleInc,
+        totalAmount,
+        totalCost,
       }}>
       {children}
     </CartContextContainer.Provider>
